@@ -136,10 +136,15 @@ export default function ConnectionsScreen() {
   };
 
   const handleMessage = (profileId: string) => {
+    // Close modal first, then navigate
+    setShowProfileModal(false);
+    setSelectedProfile(null);
     router.push(`/chat/${profileId}`);
   };
 
   const handleViewFullProfile = (profileId: string) => {
+    setShowProfileModal(false);
+    setSelectedProfile(null);
     router.push(`/profile/${profileId}`);
   };
 

@@ -35,8 +35,8 @@ const mockChatData: { [key: string]: { user: ChatUser; messages: ChatMessage[] }
   '1': {
     user: {
       id: '1',
-      name: 'Sarah Chen',
-      profession: 'Product Manager',
+      name: 'Nejmo Serraoui',
+      profession: 'Senior Product Manager',
       company: 'Meta',
       isOnline: true,
     },
@@ -44,7 +44,7 @@ const mockChatData: { [key: string]: { user: ChatUser; messages: ChatMessage[] }
       {
         id: '1',
         senderId: '1',
-        text: 'Hi! Thanks for connecting. I saw your background in AI and would love to chat about potential collaboration opportunities.',
+        text: 'Hi! Thanks for connecting. I saw your background in software engineering and would love to chat about potential collaboration opportunities.',
         timestamp: '10:30 AM',
         type: 'text',
         isRead: true,
@@ -52,7 +52,7 @@ const mockChatData: { [key: string]: { user: ChatUser; messages: ChatMessage[] }
       {
         id: '2',
         senderId: 'me',
-        text: 'Hi Sarah! Great to connect with you too. I\'d be happy to discuss AI projects. What kind of collaboration were you thinking about?',
+        text: 'Hi Nejmo! Great to connect with you too. I\'d be happy to discuss tech projects. What kind of collaboration were you thinking about?',
         timestamp: '10:32 AM',
         type: 'text',
         isRead: true,
@@ -60,7 +60,7 @@ const mockChatData: { [key: string]: { user: ChatUser; messages: ChatMessage[] }
       {
         id: '3',
         senderId: '1',
-        text: 'We\'re working on some exciting tech product features and could use someone with your expertise. Would you be interested in a coffee chat this week?',
+        text: 'We\'re working on some exciting product features and could use someone with your expertise. Would you be interested in a coffee chat this week?',
         timestamp: '10:35 AM',
         type: 'text',
         isRead: true,
@@ -71,7 +71,7 @@ const mockChatData: { [key: string]: { user: ChatUser; messages: ChatMessage[] }
     user: {
       id: '2',
       name: 'Marcus Rodriguez',
-      profession: 'Software Engineer',
+      profession: 'Senior Software Engineer',
       company: 'Google',
       isOnline: false,
     },
@@ -81,6 +81,52 @@ const mockChatData: { [key: string]: { user: ChatUser; messages: ChatMessage[] }
         senderId: '2',
         text: 'Hey! I noticed we have similar interests in machine learning. Would love to connect and maybe collaborate on some open source projects.',
         timestamp: 'Yesterday',
+        type: 'text',
+        isRead: true,
+      },
+    ],
+  },
+  '3': {
+    user: {
+      id: '3',
+      name: 'Emily Johnson',
+      profession: 'Senior UX Designer',
+      company: 'Airbnb',
+      isOnline: true,
+    },
+    messages: [
+      {
+        id: '1',
+        senderId: '3',
+        text: 'Hi! Great to connect with you. I saw your work and would love to discuss some design collaboration opportunities.',
+        timestamp: '2:15 PM',
+        type: 'text',
+        isRead: true,
+      },
+      {
+        id: '2',
+        senderId: 'me',
+        text: 'Hi Emily! Thanks for reaching out. I\'d be interested in hearing more about the design projects you\'re working on.',
+        timestamp: '2:18 PM',
+        type: 'text',
+        isRead: true,
+      },
+    ],
+  },
+  '4': {
+    user: {
+      id: '4',
+      name: 'David Kim',
+      profession: 'Frontend Developer',
+      company: 'Stripe',
+      isOnline: false,
+    },
+    messages: [
+      {
+        id: '1',
+        senderId: '4',
+        text: 'Hi! I saw your profile and would love to connect. I\'m working on some exciting React projects and could use your insights.',
+        timestamp: '11:30 AM',
         type: 'text',
         isRead: true,
       },
@@ -97,7 +143,34 @@ export default function ChatScreen() {
   useEffect(() => {
     // Simulate loading chat data
     setTimeout(() => {
-      if (id && mockChatData[id]) {
+      if (id) {
+        if (mockChatData[id]) {
+          // Existing conversation found
+          setChatData(mockChatData[id]);
+        } else {
+          // Create new conversation for unknown user
+          const newChatData = {
+            user: {
+              id: id,
+              name: 'New Contact',
+              profession: 'Professional',
+              company: 'Unknown',
+              isOnline: false,
+            },
+            messages: [
+              {
+                id: '1',
+                senderId: 'me',
+                text: 'Hi! Thanks for connecting. Looking forward to our conversation.',
+                timestamp: 'Just now',
+                type: 'text' as const,
+                isRead: false,
+              },
+            ],
+          };
+          setChatData(newChatData);
+        }
+      } else {
         setChatData(mockChatData[id]);
       }
       setIsLoading(false);

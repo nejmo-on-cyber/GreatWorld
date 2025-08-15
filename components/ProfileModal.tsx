@@ -55,8 +55,6 @@ interface ProfileModalProps {
   onViewFullProfile: (profileId: string) => void;
 }
 
-const { height } = Dimensions.get('window');
-
 export default function ProfileModal({
   visible,
   onClose,
@@ -239,7 +237,9 @@ export default function ProfileModal({
           {profile.connectionStatus === 'connected' && (
             <TouchableOpacity 
               style={[styles.actionButton, styles.scheduleButton]} 
-              onPress={() => Alert.alert('Schedule Meeting', 'Meeting scheduling feature coming soon!')}
+              onPress={() => {
+                Alert.alert('Schedule Meeting', 'Meeting scheduling feature coming soon!');
+              }}
             >
               <Calendar size={16} color="#10B981" strokeWidth={2} />
               <Text style={styles.scheduleButtonText}>Schedule</Text>
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
-    maxHeight: height * 0.9,
+    maxHeight: Dimensions.get('window').height * 0.9,
   },
   header: {
     flexDirection: 'row',
