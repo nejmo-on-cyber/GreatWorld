@@ -174,7 +174,6 @@ export default function DiscoverScreen() {
         <Text style={styles.statusText}>
           {isStationary ? 'You are stationary - Visible to nearby professionals' : 'You are moving - Hidden from radar'}
         </Text>
-      </View>
     </View>
   );
 
@@ -198,10 +197,10 @@ export default function DiscoverScreen() {
             <Text style={styles.userCompany}>{user.company}</Text>
             <Text style={styles.metaText}>{user.distance}m away</Text>
           </View>
-          <View style={styles.metaItem}>
-            <Clock size={14} color="#6B7280" strokeWidth={2} />
-            <Text style={styles.metaText}>{user.lastActive}</Text>
-          </View>
+        </View>
+        <View style={styles.metaItem}>
+          <Clock size={14} color="#6B7280" strokeWidth={2} />
+          <Text style={styles.metaText}>{user.lastActive}</Text>
         </View>
         <View style={styles.compatibilityBadge}>
           <Zap size={12} color="#FBBF24" strokeWidth={2} />
