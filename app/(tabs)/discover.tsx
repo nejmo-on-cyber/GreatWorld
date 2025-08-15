@@ -196,7 +196,11 @@ export default function DiscoverScreen() {
             </View>
             <Text style={styles.userProfession}>{user.profession}</Text>
             <Text style={styles.userCompany}>{user.company}</Text>
-            <Text style={styles.userDistance}>{user.distance}m away • {user.lastActive}</Text>
+            <Text style={styles.metaText}>{user.distance}m away</Text>
+          </View>
+          <View style={styles.metaItem}>
+            <Clock size={14} color="#6B7280" strokeWidth={2} />
+            <Text style={styles.metaText}>{user.lastActive}</Text>
           </View>
         </View>
         <View style={styles.compatibilityBadge}>
