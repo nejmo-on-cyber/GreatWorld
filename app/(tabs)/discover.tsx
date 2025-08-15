@@ -15,6 +15,7 @@ import { MapPin, Radar, Eye, EyeOff, Zap, MessageSquare, Shield, Settings, Refre
 import ARDiscoveryView from '@/components/ARDiscoveryView';
 import SmartScheduling from '@/components/SmartScheduling';
 import NetworkAnalytics from '@/components/NetworkAnalytics';
+import ProfileModal from '@/components/ProfileModal';
 
 interface NearbyUser {
   id: string;
@@ -85,6 +86,8 @@ export default function DiscoverScreen() {
   const [showScheduling, setShowScheduling] = useState(false);
   const [selectedUser, setSelectedUser] = useState<NearbyUser | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<NearbyUser | null>(null);
 
   useEffect(() => {
     // Simulate loading nearby users
@@ -111,12 +114,33 @@ export default function DiscoverScreen() {
   };
 
   const handleConnectRequest = (user: NearbyUser) => {
-    // Navigate to user profile
-    router.push(`/profile/${user.id}`);
+    setSelectedProfile(user);
+    setShowProfileModal(true);
   };
 
   const handleUserCardPress = (user: NearbyUser) => {
-    router.push(`/profile/${user.id}`);
+    setSelectedProfile(user);
+    setShowProfileModal(true);
+  };
+
+  const handleConnect = (profileId: string) => {
+    // Update the user's connection status
+    setNearbyUsers(prev => 
+      prev.map(user => 
+        user.id === profileId 
+          ? { ...user, connectionStatus: 'pending_sent' }
+          : user
+      )
+    );
+    setShowProfileModal(false);
+  };
+
+  const handleMessage = (profileId: string) => {
+    router.push(`/chat/${profileId}`);
+  };
+
+  const handleViewFullProfile = (profileId: string) => {
+    router.push(`/profile/${profileId}`);
   };
 
   const handleScheduleMeeting = (slot: any) => {
@@ -344,6 +368,24 @@ export default function DiscoverScreen() {
           onScheduleMeeting={handleScheduleMeeting}
         />
       )}
+
+      <ProfileModal
+        visible={showProfileModal}
+        onClose={() => {
+          setShowProfileModal(false);
+          setSelectedProfile(null);
+        }}
+        profile={selectedProfile ? {
+          ...selectedProfile,
+          bio: 'Passionate about building products that connect people and drive meaningful engagement. 8+ years in product management with focus on AI-driven features and user experience optimization.',
+          joinedDate: '2023-08-15',
+          location: 'San Francisco, CA',
+          connectionStatus: selectedProfile.connectionStatus || 'none',
+        } : null}
+        onConnect={handleConnect}
+        onMessage={handleMessage}
+        onViewFullProfile={handleViewFullProfile}
+      />
     </View>
   );
 }

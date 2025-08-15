@@ -16,6 +16,7 @@ import {
   Shield,
   Circle,
 } from 'lucide-react-native';
+import ProfileModal from '@/components/ProfileModal';
 
 interface Message {
   id: string;
@@ -88,13 +89,29 @@ const mockMessages: Message[] = [
 
 export default function MessagesScreen() {
   const [messages] = useState<Message[]>(mockMessages);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<Message | null>(null);
 
   const handleMessagePress = (message: Message) => {
     router.push(`/chat/${message.id}`);
   };
 
   const handleViewProfile = (message: Message) => {
-    router.push(`/profile/${message.id}`);
+    setSelectedProfile(message);
+    setShowProfileModal(true);
+  };
+
+  const handleConnect = (profileId: string) => {
+    Alert.alert('Connection Request', 'Connection request sent!');
+    setShowProfileModal(false);
+  };
+
+  const handleMessage = (profileId: string) => {
+    router.push(`/chat/${profileId}`);
+  };
+
+  const handleViewFullProfile = (profileId: string) => {
+    router.push(`/profile/${profileId}`);
   };
 
   const unreadCount = messages.filter(msg => msg.unread).length;
@@ -170,6 +187,37 @@ export default function MessagesScreen() {
           </View>
         )}
       </ScrollView>
+
+      <ProfileModal
+        visible={showProfileModal}
+        onClose={() => {
+          setShowProfileModal(false);
+          setSelectedProfile(null);
+        }}
+        profile={selectedProfile ? {
+          id: selectedProfile.id,
+          firstName: selectedProfile.firstName,
+          lastName: selectedProfile.lastName,
+          photo: selectedProfile.photo,
+          profession: selectedProfile.profession,
+          company: selectedProfile.company,
+          bio: 'Passionate about building innovative solutions and connecting with fellow professionals in the tech industry.',
+          interests: ['Technology', 'Innovation', 'Networking', 'Startups'],
+          lookingFor: ['collaboration', 'networking'],
+          isVerified: selectedProfile.isVerified,
+          distance: Math.floor(Math.random() * 200) + 50,
+          compatibility: Math.floor(Math.random() * 20) + 80,
+          lastActive: '5 min ago',
+          connections: Math.floor(Math.random() * 200) + 100,
+          mutualConnections: Math.floor(Math.random() * 15) + 5,
+          connectionStatus: 'connected',
+          joinedDate: '2023-08-15',
+          location: 'San Francisco, CA',
+        } : null}
+        onConnect={handleConnect}
+        onMessage={handleMessage}
+        onViewFullProfile={handleViewFullProfile}
+      />
     </View>
   );
 }

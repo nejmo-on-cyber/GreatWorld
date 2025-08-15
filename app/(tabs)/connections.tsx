@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { Users, Clock, Check, X, MessageCircle, Shield, MoveHorizontal as MoreHorizontal, UserCheck, UserMinus, Search } from 'lucide-react-native';
+import ProfileModal from '@/components/ProfileModal';
 
 interface Connection {
   id: string;
@@ -82,6 +83,8 @@ const mockConnections: Connection[] = [
 export default function ConnectionsScreen() {
   const [connections, setConnections] = useState<Connection[]>(mockConnections);
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'accepted'>('all');
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<Connection | null>(null);
 
   const handleAcceptConnection = (connectionId: string) => {
     setConnections(prev => 
@@ -116,7 +119,28 @@ export default function ConnectionsScreen() {
   };
 
   const handleViewProfile = (connection: Connection) => {
-    router.push(`/profile/${connection.id}`);
+    setSelectedProfile(connection);
+    setShowProfileModal(true);
+  };
+
+  const handleConnect = (profileId: string) => {
+    // Handle connection logic
+    setConnections(prev => 
+      prev.map(conn => 
+        conn.id === profileId 
+          ? { ...conn, status: 'accepted', connectedAt: 'Just now' }
+          : conn
+      )
+    );
+    setShowProfileModal(false);
+  };
+
+  const handleMessage = (profileId: string) => {
+    router.push(`/chat/${profileId}`);
+  };
+
+  const handleViewFullProfile = (profileId: string) => {
+    router.push(`/profile/${profileId}`);
   };
 
   const filteredConnections = connections.filter(conn => {
@@ -310,6 +334,39 @@ export default function ConnectionsScreen() {
           </View>
         )}
       </ScrollView>
+
+      <ProfileModal
+        visible={showProfileModal}
+        onClose={() => {
+          setShowProfileModal(false);
+          setSelectedProfile(null);
+        }}
+        profile={selectedProfile ? {
+          id: selectedProfile.id,
+          firstName: selectedProfile.firstName,
+          lastName: selectedProfile.lastName,
+          photo: selectedProfile.photo,
+          profession: selectedProfile.profession,
+          company: selectedProfile.company,
+          bio: 'Passionate about building innovative solutions and connecting with fellow professionals in the tech industry.',
+          interests: ['Technology', 'Innovation', 'Networking', 'Startups'],
+          lookingFor: selectedProfile.status === 'accepted' ? ['collaboration', 'networking'] : ['networking'],
+          isVerified: selectedProfile.isVerified,
+          distance: Math.floor(Math.random() * 200) + 50, // Mock distance
+          compatibility: Math.floor(Math.random() * 20) + 80, // Mock compatibility
+          lastActive: '5 min ago',
+          connections: Math.floor(Math.random() * 200) + 100,
+          mutualConnections: selectedProfile.mutualConnections || 0,
+          connectionStatus: selectedProfile.status === 'accepted' ? 'connected' : 
+                          selectedProfile.status === 'pending_sent' ? 'pending_sent' :
+                          selectedProfile.status === 'pending_received' ? 'pending_received' : 'none',
+          joinedDate: '2023-08-15',
+          location: 'San Francisco, CA',
+        } : null}
+        onConnect={handleConnect}
+        onMessage={handleMessage}
+        onViewFullProfile={handleViewFullProfile}
+      />
     </View>
   );
 }
