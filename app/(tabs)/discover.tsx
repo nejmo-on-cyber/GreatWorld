@@ -179,7 +179,11 @@ export default function DiscoverScreen() {
     </View>
   );
 
-  const UserCard = ({ user }: { user: NearbyUser }) => (
+interface UserCardProps {
+  user: NearbyUser;
+}
+
+  const UserCard = ({ user }: UserCardProps) => (
     <TouchableOpacity 
       style={styles.userCard}
       onPress={() => handleUserCardPress(user)}
