@@ -9,7 +9,11 @@ import {
   Alert,
   StatusBar,
 } from 'react-native';
+import { router } from 'expo-router';
 import { Settings, CreditCard as Edit3, Shield, Eye, EyeOff, MapPin, Briefcase, Users, Star, Bell, Lock, CircleHelp as HelpCircle, LogOut, Camera, CircleCheck as CheckCircle, TriangleAlert as AlertTriangle } from 'lucide-react-native';
+import UserStatusIndicator from '@/components/UserStatusIndicator';
+import UserStatusSelector from '@/components/UserStatusSelector';
+import { useUserStatus } from '@/hooks/useUserStatus';
 
 interface UserProfile {
   firstName: string;
@@ -46,6 +50,7 @@ const mockProfile: UserProfile = {
 export default function ProfileScreen() {
   const [profile] = useState<UserProfile>(mockProfile);
   const [isVisible, setIsVisible] = useState(true);
+  const { statusData, updateStatus } = useUserStatus();
 
   const handleEditProfile = () => {
     Alert.alert('Edit Profile', 'Profile editing feature coming soon!');
@@ -138,6 +143,9 @@ export default function ProfileScreen() {
             <TouchableOpacity style={styles.cameraButton}>
               <Camera size={16} color="white" strokeWidth={2} />
             </TouchableOpacity>
+            <View style={styles.statusIndicatorContainer}>
+              <UserStatusIndicator status={statusData.status} size={16} />
+            </View>
           </View>
 
           <View style={styles.profileInfo}>
@@ -157,6 +165,16 @@ export default function ProfileScreen() {
               <Text style={styles.editProfileText}>Edit Profile</Text>
             </TouchableOpacity>
           </View>
+        </View>
+
+        {/* Status Section */}
+        <View style={styles.statusSection}>
+          <Text style={styles.sectionTitle}>Your Status</Text>
+          <UserStatusSelector
+            currentStatus={statusData.status}
+            customMessage={statusData.customMessage}
+            onStatusChange={updateStatus}
+          />
         </View>
 
         {/* Stats Section */}
@@ -332,6 +350,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  statusIndicatorContainer: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   profileInfo: {
     alignItems: 'center',
   },
@@ -371,13 +405,17 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#1E40AF',
   },
+  statusSection: {
+    backgroundColor: 'white',
+    padding: 20,
+    marginTop: 12,
+  },
   statsSection: {
     flexDirection: 'row',
     backgroundColor: 'white',
     paddingVertical: 20,
     paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    marginTop: 12,
   },
   statItem: {
     flex: 1,

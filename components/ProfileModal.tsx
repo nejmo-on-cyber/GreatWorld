@@ -24,6 +24,7 @@ import {
   CircleCheck as CheckCircle,
   Eye,
 } from 'lucide-react-native';
+import UserStatusIndicator, { UserStatus } from './UserStatusIndicator';
 
 interface UserProfile {
   id: string;
@@ -44,6 +45,8 @@ interface UserProfile {
   connectionStatus: 'none' | 'pending_sent' | 'pending_received' | 'connected' | 'blocked';
   joinedDate: string;
   location: string;
+  status?: UserStatus;
+  customMessage?: string;
 }
 
 interface ProfileModalProps {
@@ -148,7 +151,14 @@ export default function ProfileModal({
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Profile Header */}
           <View style={styles.profileHeader}>
-            <Image source={{ uri: profile.photo }} style={styles.profilePhoto} />
+            <View style={styles.profilePhotoContainer}>
+              <Image source={{ uri: profile.photo }} style={styles.profilePhoto} />
+              {profile.status && (
+                <View style={styles.statusIndicatorContainer}>
+                  <UserStatusIndicator status={profile.status} size={12} />
+                </View>
+              )}
+            </View>
             
             <View style={styles.profileInfo}>
               <View style={styles.nameContainer}>
@@ -162,6 +172,10 @@ export default function ProfileModal({
               
               <Text style={styles.profileProfession}>{profile.profession}</Text>
               <Text style={styles.profileCompany}>{profile.company}</Text>
+              
+              {profile.customMessage && (
+                <Text style={styles.customStatusMessage}>{profile.customMessage}</Text>
+              )}
               
               <View style={styles.metaInfo}>
                 <View style={styles.metaItem}>
@@ -301,11 +315,30 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
   },
+  profilePhotoContainer: {
+    position: 'relative',
+    marginRight: 16,
+  },
   profilePhoto: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    marginRight: 16,
+  },
+  statusIndicatorContainer: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
   profileInfo: {
     flex: 1,
@@ -331,6 +364,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     marginBottom: 12,
+  },
+  customStatusMessage: {
+    fontSize: 12,
+    color: '#8B5CF6',
+    fontStyle: 'italic',
+    marginBottom: 8,
   },
   metaInfo: {
     flexDirection: 'row',

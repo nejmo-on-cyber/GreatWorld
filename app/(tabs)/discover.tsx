@@ -386,6 +386,8 @@ export default function DiscoverScreen() {
           joinedDate: '2023-08-15',
           location: 'San Francisco, CA',
           connectionStatus: selectedProfile.connectionStatus || 'none',
+          status: 'available' as const,
+          customMessage: selectedProfile.id === '1' ? 'Building the future of AI' : '',
         } : null}
         onConnect={handleConnect}
         onMessage={handleMessage}
