@@ -106,9 +106,7 @@ export default function ProfileScreen() {
           )}
         </View>
       </View>
-      {showArrow && (
-        <Text style={styles.settingsArrow}>›</Text>
-      )}
+      {showArrow ? <Text style={styles.settingsArrow}>›</Text> : null}
     </TouchableOpacity>
   );
 
