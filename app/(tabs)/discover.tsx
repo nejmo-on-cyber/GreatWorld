@@ -161,6 +161,7 @@ export default function DiscoverScreen() {
     compatibility: user.compatibility,
     isVerified: user.isVerified,
   }));
+  
   const StatusIndicator = () => (
     <View style={styles.statusContainer}>
       <View style={[styles.statusIndicator, isStationary ? styles.stationaryStatus : styles.movingStatus]}>
@@ -174,6 +175,7 @@ export default function DiscoverScreen() {
         <Text style={styles.statusText}>
           {isStationary ? 'You are stationary - Visible to nearby professionals' : 'You are moving - Hidden from radar'}
         </Text>
+      </View>
     </View>
   );
 
@@ -195,7 +197,9 @@ export default function DiscoverScreen() {
             </View>
             <Text style={styles.userProfession}>{user.profession}</Text>
             <Text style={styles.userCompany}>{user.company}</Text>
-            <Text style={styles.metaText}>{user.distance}m away</Text>
+            <View style={styles.metaItem}>
+              <Text style={styles.metaText}>{user.distance}m away</Text>
+            </View>
           </View>
         </View>
         <View style={styles.metaItem}>
@@ -309,48 +313,48 @@ export default function DiscoverScreen() {
         
         {!showAnalytics && (
           <>
-        {!isStationary && (
-          <View style={styles.hiddenNotice}>
-            <MapPin size={24} color="#F59E0B" strokeWidth={2} />
-            <Text style={styles.hiddenNoticeTitle}>You're on the move!</Text>
-            <Text style={styles.hiddenNoticeText}>
-              Stop for 2+ minutes to appear on the radar and see nearby professionals.
-            </Text>
-          </View>
-        )}
-
-        {isStationary && !isVisible && (
-          <View style={styles.hiddenNotice}>
-            <EyeOff size={24} color="#6B7280" strokeWidth={2} />
-            <Text style={styles.hiddenNoticeTitle}>You're invisible</Text>
-            <Text style={styles.hiddenNoticeText}>
-              Tap the eye icon above to become visible to nearby professionals.
-            </Text>
-          </View>
-        )}
-
-        {isStationary && isVisible && (
-          <>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Nearby Professionals</Text>
-              <Text style={styles.sectionSubtitle}>{nearbyUsers.length} people within 500m</Text>
-            </View>
-
-            {nearbyUsers.map(user => (
-              <UserCard key={user.id} user={user} />
-            ))}
-
-            {nearbyUsers.length === 0 && (
-              <View style={styles.emptyState}>
-                <Radar size={48} color="#D1D5DB" strokeWidth={1.5} />
-                <Text style={styles.emptyStateTitle}>No one nearby</Text>
-                <Text style={styles.emptyStateText}>
-                  Try moving to a different location or check back later.
+            {!isStationary && (
+              <View style={styles.hiddenNotice}>
+                <MapPin size={24} color="#F59E0B" strokeWidth={2} />
+                <Text style={styles.hiddenNoticeTitle}>You're on the move!</Text>
+                <Text style={styles.hiddenNoticeText}>
+                  Stop for 2+ minutes to appear on the radar and see nearby professionals.
                 </Text>
               </View>
             )}
-          </>
-        )}
+
+            {isStationary && !isVisible && (
+              <View style={styles.hiddenNotice}>
+                <EyeOff size={24} color="#6B7280" strokeWidth={2} />
+                <Text style={styles.hiddenNoticeTitle}>You're invisible</Text>
+                <Text style={styles.hiddenNoticeText}>
+                  Tap the eye icon above to become visible to nearby professionals.
+                </Text>
+              </View>
+            )}
+
+            {isStationary && isVisible && (
+              <>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Nearby Professionals</Text>
+                  <Text style={styles.sectionSubtitle}>{nearbyUsers.length} people within 500m</Text>
+                </View>
+
+                {nearbyUsers.map(user => (
+                  <UserCard key={user.id} user={user} />
+                ))}
+
+                {nearbyUsers.length === 0 && (
+                  <View style={styles.emptyState}>
+                    <Radar size={48} color="#D1D5DB" strokeWidth={1.5} />
+                    <Text style={styles.emptyStateTitle}>No one nearby</Text>
+                    <Text style={styles.emptyStateText}>
+                      Try moving to a different location or check back later.
+                    </Text>
+                  </View>
+                )}
+              </>
+            )}
           </>
         )}
       </ScrollView>
@@ -565,6 +569,15 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   userDistance: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaText: {
     fontSize: 12,
     color: '#9CA3AF',
   },
