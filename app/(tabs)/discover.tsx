@@ -11,7 +11,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { router } from 'expo-router';
-import { MapPin, Radar, Eye, EyeOff, Zap, MessageSquare, Shield, Settings, RefreshCw, Users, Camera, Calendar, ChartBar as BarChart3 } from 'lucide-react-native';
+import { MapPin, Radar, Eye, EyeOff, Zap, MessageSquare, Shield, Settings, RefreshCw, Users, Camera, Calendar, ChartBar as BarChart3, Clock } from 'lucide-react-native';
 import ARDiscoveryView from '@/components/ARDiscoveryView';
 import SmartScheduling from '@/components/SmartScheduling';
 import NetworkAnalytics from '@/components/NetworkAnalytics';
