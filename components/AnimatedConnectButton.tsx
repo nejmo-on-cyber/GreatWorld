@@ -29,12 +29,12 @@ export default function AnimatedConnectButton({
         Animated.timing(scaleAnim, {
           toValue: 1.05,
           duration: 150,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         Animated.timing(scaleAnim, {
           toValue: 1,
           duration: 150,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ]).start();
 
@@ -56,12 +56,12 @@ export default function AnimatedConnectButton({
           Animated.timing(pulseAnim, {
             toValue: 0.95,
             duration: 1500,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
           Animated.timing(pulseAnim, {
             toValue: 1,
             duration: 1500,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
         ])
       );
@@ -86,12 +86,12 @@ export default function AnimatedConnectButton({
           Animated.timing(pulseAnim, {
             toValue: 0.95,
             duration: 1500,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
           Animated.timing(pulseAnim, {
             toValue: 1,
             duration: 1500,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
         ])
       );
