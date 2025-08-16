@@ -40,12 +40,12 @@ export default function GlowingStatusDot({
           Animated.timing(glowAnim, {
             toValue: 0.6,
             duration: 3000,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
           Animated.timing(glowAnim, {
             toValue: 1,
             duration: 3000,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
         ])
       );
@@ -83,12 +83,12 @@ export default function GlowingStatusDot({
           Animated.timing(glowAnim, {
             toValue: 0.7,
             duration: 2000,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
           Animated.timing(glowAnim, {
             toValue: 1,
             duration: 2000,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
         ])
       );
