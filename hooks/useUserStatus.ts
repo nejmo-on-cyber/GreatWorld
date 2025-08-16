@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserStatus } from '@/components/UserStatusIndicator';
 
 interface UserStatusData {
@@ -24,9 +26,7 @@ export function useUserStatus() {
 
   const loadStatusFromStorage = async () => {
     try {
-      // In a real app, this would load from AsyncStorage or API
-      // For now, we'll simulate loading from local storage
-      const savedStatus = localStorage.getItem('userStatus');
+      const savedStatus = await AsyncStorage.getItem('userStatus');
       if (savedStatus) {
         const parsed = JSON.parse(savedStatus);
         setStatusData(parsed);
@@ -46,8 +46,7 @@ export function useUserStatus() {
     };
 
     try {
-      // Save to storage
-      localStorage.setItem('userStatus', JSON.stringify(newStatusData));
+      await AsyncStorage.setItem('userStatus', JSON.stringify(newStatusData));
       setStatusData(newStatusData);
       
       // In a real app, you would also sync with your backend API here
@@ -67,40 +66,32 @@ export function useUserStatus() {
 
   // Auto-update status based on user activity
   useEffect(() => {
-    let inactivityTimer: NodeJS.Timeout;
-    let isUserActive = true;
+    let inactivityTimer: ReturnType<typeof setTimeout>;
 
-    const handleUserActivity = () => {
-      isUserActive = true;
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
       clearTimeout(inactivityTimer);
       
-      // If user was away and becomes active, update to available
-      if (statusData.status === 'away') {
-        updateStatus('available', statusData.customMessage);
-      }
-
-      // Set timer for inactivity
-      inactivityTimer = setTimeout(() => {
-        if (statusData.status === 'available' || statusData.status === 'open-to-chat') {
-          updateStatus('away', statusData.customMessage);
+      if (nextAppState === 'active') {
+        // If user was away and becomes active, update to available
+        if (statusData.status === 'away') {
+          updateStatus('available', statusData.customMessage);
         }
-      }, 10 * 60 * 1000); // 10 minutes of inactivity
+      } else if (nextAppState === 'background' || nextAppState === 'inactive') {
+        // Set timer for inactivity when app goes to background
+        inactivityTimer = setTimeout(() => {
+          if (statusData.status === 'available' || statusData.status === 'open-to-chat') {
+            updateStatus('away', statusData.customMessage);
+          }
+        }, 5 * 60 * 1000); // 5 minutes of inactivity
+      }
     };
 
-    // Listen for user activity
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-    events.forEach(event => {
-      document.addEventListener(event, handleUserActivity, true);
-    });
-
-    // Initial activity setup
-    handleUserActivity();
+    // Listen for app state changes
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
 
     return () => {
       clearTimeout(inactivityTimer);
-      events.forEach(event => {
-        document.removeEventListener(event, handleUserActivity, true);
-      });
+      subscription?.remove();
     };
   }, [statusData.status, statusData.customMessage]);
 
