@@ -11,7 +11,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { router } from 'expo-router';
-import { MapPin, Radar, Eye, EyeOff, Zap, MessageSquare, Shield, Settings, RefreshCw, Users, Camera, Calendar, ChartBar as BarChart3, Clock, MessageCircle, Check, X } from 'lucide-react-native';
+import { MapPin, Radar, Eye, EyeOff, Zap, MessageSquare, Shield, Settings, RefreshCw, Users, Camera, Calendar, ChartBar as BarChart3, Clock, MessageCircle, Check, X, Map } from 'lucide-react-native';
 import ARDiscoveryView from '@/components/ARDiscoveryView';
 import SmartScheduling from '@/components/SmartScheduling';
 import NetworkAnalytics from '@/components/NetworkAnalytics';
@@ -20,6 +20,7 @@ import StatusIndicator from '@/components/StatusIndicator';
 import FloatingStatusDot from '@/components/FloatingStatusDot';
 import GlowingStatusDot from '@/components/GlowingStatusDot';
 import AnimatedConnectButton from '@/components/AnimatedConnectButton';
+import MapDiscoveryView from '@/components/MapDiscoveryView';
 import { useMessaging } from '@/hooks/useMessaging';
 
 interface NearbyUser {
@@ -213,6 +214,7 @@ export default function DiscoverScreen() {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<NearbyUser | null>(null);
+  const [showMapView, setShowMapView] = useState(false);
   const { navigateToChat } = useMessaging();
 
   useEffect(() => {
@@ -443,6 +445,16 @@ interface UserCardProps {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.headerButton}
+            onPress={() => setShowMapView(true)}
+          >
+            <Map 
+              size={20} 
+              color="#6B7280" 
+              strokeWidth={2}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerButton}
             onPress={() => setShowARView(true)}
           >
             <Camera 
@@ -534,6 +546,23 @@ interface UserCardProps {
         visible={showARView}
         onClose={() => setShowARView(false)}
         nearbyUsers={arUsers}
+      />
+
+      <MapDiscoveryView
+        visible={showMapView}
+        onClose={() => setShowMapView(false)}
+        users={nearbyUsers.map(user => ({
+          ...user,
+          latitude: 37.7849 + (Math.random() - 0.5) * 0.01,
+          longitude: -122.4094 + (Math.random() - 0.5) * 0.01,
+          lastSeen: user.lastActive,
+        }))}
+        onUserPress={(user) => {
+          setSelectedProfile(user);
+          setShowProfileModal(true);
+        }}
+        onMessageUser={handleMessage}
+        onConnectUser={handleConnect}
       />
 
       {selectedUser && (
