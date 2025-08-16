@@ -11,11 +11,16 @@ import {
   RefreshControl,
 } from 'react-native';
 import { router } from 'expo-router';
-import { MapPin, Radar, Eye, EyeOff, Zap, MessageSquare, Shield, Settings, RefreshCw, Users, Camera, Calendar, ChartBar as BarChart3, Clock } from 'lucide-react-native';
+import { MapPin, Radar, Eye, EyeOff, Zap, MessageSquare, Shield, Settings, RefreshCw, Users, Camera, Calendar, ChartBar as BarChart3, Clock, MessageCircle, Check, X } from 'lucide-react-native';
 import ARDiscoveryView from '@/components/ARDiscoveryView';
 import SmartScheduling from '@/components/SmartScheduling';
 import NetworkAnalytics from '@/components/NetworkAnalytics';
 import ProfileModal from '@/components/ProfileModal';
+import StatusIndicator from '@/components/StatusIndicator';
+import FloatingStatusDot from '@/components/FloatingStatusDot';
+import GlowingStatusDot from '@/components/GlowingStatusDot';
+import AnimatedConnectButton from '@/components/AnimatedConnectButton';
+import { useMessaging } from '@/hooks/useMessaging';
 
 interface NearbyUser {
   id: string;
@@ -30,6 +35,8 @@ interface NearbyUser {
   lookingFor: string[];
   isVerified: boolean;
   lastActive: string;
+  status: 'online' | 'offline' | 'away' | 'busy';
+  connectionStatus?: 'none' | 'pending_sent' | 'pending_received' | 'connected' | 'blocked';
 }
 
 const mockNearbyUsers: NearbyUser[] = [
@@ -46,6 +53,8 @@ const mockNearbyUsers: NearbyUser[] = [
     lookingFor: ['networking', 'collaboration'],
     isVerified: true,
     lastActive: '2 min ago',
+    status: 'online',
+    connectionStatus: 'none',
   },
   {
     id: '2',
@@ -60,6 +69,8 @@ const mockNearbyUsers: NearbyUser[] = [
     lookingFor: ['hiring', 'networking'],
     isVerified: true,
     lastActive: '5 min ago',
+    status: 'away',
+    connectionStatus: 'none',
   },
   {
     id: '3',
@@ -74,6 +85,120 @@ const mockNearbyUsers: NearbyUser[] = [
     lookingFor: ['collaboration', 'networking'],
     isVerified: true,
     lastActive: '1 min ago',
+    status: 'busy',
+    connectionStatus: 'none',
+  },
+  {
+    id: '4',
+    firstName: 'Sarah',
+    lastName: 'Chen',
+    photo: 'https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
+    profession: 'Data Scientist',
+    company: 'Netflix',
+    distance: 200,
+    compatibility: 87,
+    interests: ['Machine Learning', 'Statistics', 'Python'],
+    lookingFor: ['mentorship', 'networking'],
+    isVerified: true,
+    lastActive: '10 min ago',
+    status: 'online',
+    connectionStatus: 'none',
+  },
+  {
+    id: '5',
+    firstName: 'James',
+    lastName: 'Wilson',
+    photo: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
+    profession: 'DevOps Engineer',
+    company: 'Amazon',
+    distance: 150,
+    compatibility: 91,
+    interests: ['Cloud Computing', 'Kubernetes', 'Automation'],
+    lookingFor: ['collaboration', 'hiring'],
+    isVerified: true,
+    lastActive: '3 min ago',
+    status: 'away',
+    connectionStatus: 'none',
+  },
+  {
+    id: '6',
+    firstName: 'Maya',
+    lastName: 'Patel',
+    photo: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
+    profession: 'Product Designer',
+    company: 'Spotify',
+    distance: 300,
+    compatibility: 85,
+    interests: ['UI/UX Design', 'Prototyping', 'User Research'],
+    lookingFor: ['networking', 'feedback'],
+    isVerified: false,
+    lastActive: '15 min ago',
+    status: 'offline',
+    connectionStatus: 'none',
+  },
+  {
+    id: '7',
+    firstName: 'Alex',
+    lastName: 'Thompson',
+    photo: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
+    profession: 'Mobile Developer',
+    company: 'Uber',
+    distance: 180,
+    compatibility: 93,
+    interests: ['React Native', 'iOS Development', 'Swift'],
+    lookingFor: ['collaboration', 'learning'],
+    isVerified: true,
+    lastActive: '1 min ago',
+    status: 'online',
+    connectionStatus: 'none',
+  },
+  {
+    id: '8',
+    firstName: 'Lisa',
+    lastName: 'Garcia',
+    photo: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
+    profession: 'Marketing Director',
+    company: 'Adobe',
+    distance: 250,
+    compatibility: 78,
+    interests: ['Digital Marketing', 'Brand Strategy', 'Analytics'],
+    lookingFor: ['partnerships', 'networking'],
+    isVerified: true,
+    lastActive: '20 min ago',
+    status: 'busy',
+    connectionStatus: 'none',
+  },
+  {
+    id: '9',
+    firstName: 'David',
+    lastName: 'Kumar',
+    photo: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
+    profession: 'Blockchain Developer',
+    company: 'Coinbase',
+    distance: 320,
+    compatibility: 89,
+    interests: ['Cryptocurrency', 'Smart Contracts', 'Web3'],
+    lookingFor: ['collaboration', 'investment'],
+    isVerified: true,
+    lastActive: '7 min ago',
+    status: 'away',
+    connectionStatus: 'none',
+  },
+  {
+    id: '10',
+    firstName: 'Rachel',
+    lastName: 'Brooks',
+    photo: 'https://images.pexels.com/photos/1181424/pexels-photo-1181424.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
+    profession: 'AI Research Scientist',
+    company: 'OpenAI',
+    distance: 400,
+    compatibility: 96,
+    interests: ['Artificial Intelligence', 'Deep Learning', 'Research'],
+    lookingFor: ['research collaboration', 'networking'],
+    isVerified: true,
+    lastActive: '4 min ago',
+    status: 'online',
+    connectionStatus: 'none',
   },
 ];
 
@@ -88,6 +213,7 @@ export default function DiscoverScreen() {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<NearbyUser | null>(null);
+  const { navigateToChat } = useMessaging();
 
   useEffect(() => {
     // Simulate loading nearby users
@@ -132,14 +258,42 @@ export default function DiscoverScreen() {
           : user
       )
     );
-    setShowProfileModal(false);
+  };
+
+  const handleWithdrawConnection = (profileId: string) => {
+    // Update the user's connection status back to none
+    setNearbyUsers(prev => 
+      prev.map(user => 
+        user.id === profileId 
+          ? { ...user, connectionStatus: 'none' }
+          : user
+      )
+    );
+  };
+
+  const handleUpdateToPending = (profileId: string) => {
+    // Update the user's connection status to pending_received
+    setNearbyUsers(prev => 
+      prev.map(user => 
+        user.id === profileId 
+          ? { ...user, connectionStatus: 'pending_received' }
+          : user
+      )
+    );
   };
 
   const handleMessage = (profileId: string) => {
-    // Close modal first, then navigate
-    setShowProfileModal(false);
-    setSelectedProfile(null);
-    router.push(`/chat/${profileId}`);
+    // Find the user data
+    const user = nearbyUsers.find(u => u.id === profileId);
+    if (user) {
+      // Use the messaging hook to navigate to chat
+      navigateToChat(
+        profileId,
+        `${user.firstName} ${user.lastName}`,
+        user.photo,
+        false // Not connected initially
+      );
+    }
   };
 
   const handleViewFullProfile = (profileId: string) => {
@@ -191,7 +345,10 @@ interface UserCardProps {
     >
       <View style={styles.userCardHeader}>
         <View style={styles.userInfo}>
-          <Image source={{ uri: user.photo }} style={styles.userPhoto} />
+          <View style={styles.photoContainer}>
+            <Image source={{ uri: user.photo }} style={styles.userPhoto} />
+            <GlowingStatusDot status={user.status} size={10} position="top-right" />
+          </View>
           <View style={styles.userDetails}>
             <View style={styles.nameContainer}>
               <Text style={styles.userName}>{user.firstName} {user.lastName}</Text>
@@ -231,16 +388,26 @@ interface UserCardProps {
         </Text>
       </View>
 
-      <TouchableOpacity
-        style={styles.connectButton}
-        onPress={(e) => {
-          e.stopPropagation();
-          handleConnectRequest(user);
-        }}
-      >
-        <Users size={16} color="white" strokeWidth={2} />
-        <Text style={styles.connectButtonText}>View Profile</Text>
-      </TouchableOpacity>
+      <View style={styles.actionButtonsContainer}>
+        <TouchableOpacity
+          style={styles.messageButton}
+          activeOpacity={0.7}
+          onPress={(e) => {
+            e.stopPropagation();
+            handleMessage(user.id);
+          }}
+        >
+          <MessageCircle size={16} color="#1E40AF" strokeWidth={2} />
+          <Text style={styles.messageButtonText}>Send Message</Text>
+        </TouchableOpacity>
+        
+        <AnimatedConnectButton
+          connectionStatus={user.connectionStatus || 'none'}
+          onConnect={() => handleConnect(user.id)}
+          onWithdraw={() => handleWithdrawConnection(user.id)}
+          onUpdateToPending={() => handleUpdateToPending(user.id)}
+        />
+      </View>
     </TouchableOpacity>
   );
 
@@ -541,12 +708,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flex: 1,
   },
+  photoContainer: {
+    position: 'relative',
+    marginRight: 16,
+  },
   userPhoto: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    marginRight: 16,
   },
+
   userDetails: {
     flex: 1,
   },
@@ -632,21 +803,35 @@ const styles = StyleSheet.create({
     color: '#374151',
     flex: 1,
   },
-  connectButton: {
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 4,
+  },
+  messageButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1E40AF',
+    backgroundColor: 'white',
     paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#1E40AF',
     gap: 8,
+    shadowColor: '#1E40AF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  connectButtonText: {
-    fontSize: 16,
+  messageButtonText: {
+    fontSize: 14,
     fontWeight: '600',
-    color: 'white',
+    color: '#1E40AF',
   },
+
   emptyState: {
     alignItems: 'center',
     backgroundColor: 'white',

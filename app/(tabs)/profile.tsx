@@ -8,12 +8,18 @@ import {
   Image,
   Alert,
   StatusBar,
+  RefreshControl,
+  Linking,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Settings, CreditCard as Edit3, Shield, Eye, EyeOff, MapPin, Briefcase, Users, Star, Bell, Lock, CircleHelp as HelpCircle, LogOut, Camera, CircleCheck as CheckCircle, TriangleAlert as AlertTriangle } from 'lucide-react-native';
 import UserStatusIndicator from '@/components/UserStatusIndicator';
 import UserStatusSelector from '@/components/UserStatusSelector';
+import ProfileCompletionIndicator from '@/components/ProfileCompletionIndicator';
+import ProfileAnalytics from '@/components/ProfileAnalytics';
+import ProfileVerification from '@/components/ProfileVerification';
 import { useUserStatus } from '@/hooks/useUserStatus';
+import { useMessaging } from '@/hooks/useMessaging';
 
 interface UserProfile {
   firstName: string;
@@ -48,12 +54,34 @@ const mockProfile: UserProfile = {
 };
 
 export default function ProfileScreen() {
-  const [profile] = useState<UserProfile>(mockProfile);
+  const [profile, setProfile] = useState<UserProfile>(mockProfile);
   const [isVisible, setIsVisible] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { statusData, updateStatus } = useUserStatus();
+  const { navigateToChat } = useMessaging();
+
+  const refreshProfile = async () => {
+    setIsRefreshing(true);
+    // Simulate API call to refresh profile data
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setIsRefreshing(false);
+  };
+
+  const getProfileCompletionFields = () => {
+    return [
+      { name: 'Profile Photo', isCompleted: !!profile.photo, isRequired: true },
+      { name: 'First Name', isCompleted: !!profile.firstName, isRequired: true },
+      { name: 'Last Name', isCompleted: !!profile.lastName, isRequired: true },
+      { name: 'Profession', isCompleted: !!profile.profession, isRequired: true },
+      { name: 'Company', isCompleted: !!profile.company, isRequired: false },
+      { name: 'Bio', isCompleted: !!profile.bio && profile.bio.length > 20, isRequired: false },
+      { name: 'Interests', isCompleted: profile.interests.length > 0, isRequired: false },
+      { name: 'Looking For', isCompleted: profile.lookingFor.length > 0, isRequired: false },
+    ];
+  };
 
   const handleEditProfile = () => {
-    Alert.alert('Edit Profile', 'Profile editing feature coming soon!');
+    router.push('/profile/edit');
   };
 
   const handleSettings = () => {
@@ -72,7 +100,18 @@ export default function ProfileScreen() {
   };
 
   const handleVerification = () => {
-    Alert.alert('ID Verification', 'Your identity has been successfully verified!');
+    Alert.alert(
+      'Start Verification',
+      'To verify your identity, you\'ll need to provide:\n\n• Government-issued ID\n• Selfie photo\n• Professional credentials\n\nThis process takes 1-2 business days.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Start', onPress: () => Alert.alert('Verification Started', 'Please check your email for next steps.') },
+      ]
+    );
+  };
+
+  const handleResubmitVerification = () => {
+    Alert.alert('Resubmit Verification', 'Please review the requirements and submit new documents.');
   };
 
   const SettingsOption = ({
@@ -133,7 +172,17 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={refreshProfile}
+            tintColor="#1E40AF"
+          />
+        }
+      >
         {/* Profile Section */}
         <View style={styles.profileSection}>
           <View style={styles.profileImageContainer}>
@@ -175,21 +224,17 @@ export default function ProfileScreen() {
           />
         </View>
 
-        {/* Stats Section */}
-        <View style={styles.statsSection}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{profile.connections}</Text>
-            <Text style={styles.statLabel}>Connections</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{profile.profileViews}</Text>
-            <Text style={styles.statLabel}>Profile Views</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{profile.compatibility}%</Text>
-            <Text style={styles.statLabel}>Avg Match</Text>
-          </View>
-        </View>
+        {/* Profile Analytics */}
+        <ProfileAnalytics
+          connections={profile.connections}
+          profileViews={profile.profileViews}
+          compatibility={profile.compatibility}
+          messages={45}
+          meetings={12}
+          averageDistance={250}
+          topIndustries={['Technology', 'Design', 'Marketing']}
+          onViewDetails={() => Alert.alert('Analytics', 'Detailed analytics coming soon!')}
+        />
 
         {/* Bio Section */}
         <View style={styles.section}>
@@ -217,29 +262,48 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
+        {/* Profile Completion */}
+        <ProfileCompletionIndicator
+          fields={getProfileCompletionFields()}
+          onCompleteProfile={handleEditProfile}
+        />
+
         {/* Verification Status */}
+        <ProfileVerification
+          verificationStatus={{
+            status: profile.verificationStatus,
+            submittedAt: 'December 15, 2024',
+          }}
+          onVerify={handleVerification}
+          onResubmit={handleResubmitVerification}
+        />
+
+        {/* Social Links */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Verification Status</Text>
-          <TouchableOpacity style={styles.verificationCard} onPress={handleVerification}>
-            <View style={styles.verificationLeft}>
-              {profile.verificationStatus === 'verified' && (
-                <CheckCircle size={24} color="#10B981" strokeWidth={2} />
-              )}
-              {profile.verificationStatus === 'pending' && (
-                <AlertTriangle size={24} color="#F59E0B" strokeWidth={2} />
-              )}
-              <View style={styles.verificationInfo}>
-                <Text style={styles.verificationTitle}>
-                  {profile.verificationStatus === 'verified' && 'Identity Verified'}
-                  {profile.verificationStatus === 'pending' && 'Verification Pending'}
-                </Text>
-                <Text style={styles.verificationSubtitle}>
-                  {profile.verificationStatus === 'verified' && 'Your identity has been confirmed'}
-                  {profile.verificationStatus === 'pending' && 'Review in progress'}
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>Social Links</Text>
+          <View style={styles.socialLinksContainer}>
+            <TouchableOpacity 
+              style={styles.socialLink}
+              onPress={() => Linking.openURL('https://linkedin.com/in/nejmoserraoui')}
+            >
+              <Text style={styles.socialLinkText}>LinkedIn Profile</Text>
+              <Text style={styles.socialLinkArrow}>›</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.socialLink}
+              onPress={() => Linking.openURL('https://github.com/nejmo')}
+            >
+              <Text style={styles.socialLinkText}>GitHub</Text>
+              <Text style={styles.socialLinkArrow}>›</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.socialLink}
+              onPress={() => Linking.openURL('https://nejmo.dev')}
+            >
+              <Text style={styles.socialLinkText}>Personal Website</Text>
+              <Text style={styles.socialLinkArrow}>›</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Settings Options */}
@@ -248,25 +312,25 @@ export default function ProfileScreen() {
             icon={Bell}
             title="Notifications"
             subtitle="Manage your notification preferences"
-            onPress={() => Alert.alert('Notifications', 'Notification settings coming soon!')}
+            onPress={() => router.push('/settings')}
           />
           <SettingsOption
             icon={Lock}
             title="Privacy & Safety"
             subtitle="Control your visibility and safety settings"
-            onPress={() => Alert.alert('Privacy', 'Privacy settings coming soon!')}
+            onPress={() => router.push('/settings')}
           />
           <SettingsOption
             icon={MapPin}
             title="Location Settings"
             subtitle="Manage location sharing preferences"
-            onPress={() => Alert.alert('Location', 'Location settings coming soon!')}
+            onPress={() => router.push('/settings')}
           />
           <SettingsOption
             icon={HelpCircle}
             title="Help & Support"
             subtitle="Get help or contact support"
-            onPress={() => Alert.alert('Help', 'Support center coming soon!')}
+            onPress={() => router.push('/settings/help')}
           />
           <SettingsOption
             icon={LogOut}
@@ -536,6 +600,30 @@ const styles = StyleSheet.create({
   settingsArrow: {
     fontSize: 20,
     color: '#D1D5DB',
+    fontWeight: '300',
+  },
+  socialLinksContainer: {
+    gap: 12,
+  },
+  socialLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  socialLinkText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#1E40AF',
+  },
+  socialLinkArrow: {
+    fontSize: 18,
+    color: '#9CA3AF',
     fontWeight: '300',
   },
 });

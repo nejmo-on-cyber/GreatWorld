@@ -10,7 +10,7 @@ import {
   Alert,
   Dimensions,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useRouter } from 'expo-router';
 import {
   X,
   Shield,
@@ -25,6 +25,10 @@ import {
   Eye,
 } from 'lucide-react-native';
 import UserStatusIndicator, { UserStatus } from './UserStatusIndicator';
+import { useMessaging } from '@/hooks/useMessaging';
+import StatusIndicator from './StatusIndicator';
+import FloatingStatusDot from './FloatingStatusDot';
+import GlowingStatusDot from './GlowingStatusDot';
 
 interface UserProfile {
   id: string;
@@ -47,6 +51,7 @@ interface UserProfile {
   location: string;
   status?: UserStatus;
   customMessage?: string;
+  onlineStatus?: 'online' | 'offline' | 'away' | 'busy';
 }
 
 interface ProfileModalProps {
@@ -66,6 +71,9 @@ export default function ProfileModal({
   onMessage,
   onViewFullProfile,
 }: ProfileModalProps) {
+  const { navigateToChat } = useMessaging();
+  const navigation = useRouter();
+  
   if (!profile) return null;
 
   const handleConnect = () => {
@@ -86,12 +94,18 @@ export default function ProfileModal({
   };
 
   const handleMessage = () => {
-    onMessage(profile.id);
+    // Use the messaging hook to navigate to chat
+    navigateToChat(
+      profile.id,
+      `${profile.firstName} ${profile.lastName}`,
+      profile.photo,
+      profile.connectionStatus === 'connected'
+    );
     onClose();
   };
 
   const handleViewFullProfile = () => {
-    onViewFullProfile(profile.id);
+    navigation.push(`/profile/${profile.id}`);
     onClose();
   };
 
@@ -153,6 +167,11 @@ export default function ProfileModal({
           <View style={styles.profileHeader}>
             <View style={styles.profilePhotoContainer}>
               <Image source={{ uri: profile.photo }} style={styles.profilePhoto} />
+              <GlowingStatusDot 
+                status={profile.onlineStatus || 'offline'} 
+                size={12} 
+                position="top-right" 
+              />
               {profile.status && (
                 <View style={styles.statusIndicatorContainer}>
                   <UserStatusIndicator status={profile.status} size={12} />
@@ -324,6 +343,7 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
   },
+
   statusIndicatorContainer: {
     position: 'absolute',
     top: 4,

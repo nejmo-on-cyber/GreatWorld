@@ -8,7 +8,7 @@ import {
   Image,
   StatusBar,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useRouter } from 'expo-router';
 import {
   MessageCircle,
   Search,
@@ -17,6 +17,10 @@ import {
   Circle,
 } from 'lucide-react-native';
 import ProfileModal from '@/components/ProfileModal';
+import { useMessaging } from '@/hooks/useMessaging';
+import StatusIndicator from '@/components/StatusIndicator';
+import FloatingStatusDot from '@/components/FloatingStatusDot';
+import GlowingStatusDot from '@/components/GlowingStatusDot';
 
 interface Message {
   id: string;
@@ -30,6 +34,7 @@ interface Message {
   unread: boolean;
   isVerified: boolean;
   online: boolean;
+  status: 'online' | 'offline' | 'away' | 'busy';
 }
 
 const mockMessages: Message[] = [
@@ -45,6 +50,7 @@ const mockMessages: Message[] = [
     unread: true,
     isVerified: true,
     online: true,
+    status: 'online',
   },
   {
     id: '2',
@@ -58,6 +64,7 @@ const mockMessages: Message[] = [
     unread: true,
     isVerified: true,
     online: false,
+    status: 'away',
   },
   {
     id: '3',
@@ -71,6 +78,7 @@ const mockMessages: Message[] = [
     unread: false,
     isVerified: true,
     online: true,
+    status: 'busy',
   },
   {
     id: '4',
@@ -84,20 +92,34 @@ const mockMessages: Message[] = [
     unread: false,
     isVerified: true,
     online: false,
+    status: 'offline',
   },
 ];
 
 export default function MessagesScreen() {
-  const [messages] = useState<Message[]>(mockMessages);
+  const { conversations, navigateToChat, isAILoading } = useMessaging();
+  const navigation = useRouter();
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<Message | null>(null);
 
   const handleMessagePress = (message: Message) => {
-    router.push(`/chat/${message.id}`);
+    navigation.push(`/chat/${message.id}`);
   };
 
-  const handleViewProfile = (message: Message) => {
-    setSelectedProfile(message);
+  const handleViewProfile = (conversation: any) => {
+    setSelectedProfile({
+      id: conversation.participantId,
+      firstName: conversation.participantName.split(' ')[0],
+      lastName: conversation.participantName.split(' ').slice(1).join(' '),
+      photo: conversation.participantPhoto,
+      profession: 'Professional',
+      company: 'Unknown',
+      lastMessage: conversation.lastMessage,
+      timestamp: conversation.timestamp,
+      unread: conversation.unread,
+      isVerified: conversation.isConnected,
+      online: false,
+    });
     setShowProfileModal(true);
   };
 
@@ -107,10 +129,10 @@ export default function MessagesScreen() {
   };
 
   const handleMessage = (profileId: string) => {
-    // Close modal first, then navigate
+    // Close modal first, then navigate using messaging hook
     setShowProfileModal(false);
     setSelectedProfile(null);
-    router.push(`/chat/${profileId}`);
+    navigateToChat(profileId);
   };
 
   const handleViewFullProfile = (profileId: string) => {
@@ -119,42 +141,51 @@ export default function MessagesScreen() {
     router.push(`/profile/${profileId}`);
   };
 
-  const unreadCount = messages.filter(msg => msg.unread).length;
+  const unreadCount = conversations.filter(conv => conv.unread).length;
 
-  const MessageCard = ({ message }: { message: Message }) => (
+  const MessageCard = ({ conversation }: { conversation: any }) => (
     <TouchableOpacity
-      style={[styles.messageCard, message.unread && styles.unreadMessageCard]}
-      onPress={() => handleMessagePress(message)}
-      onLongPress={() => handleViewProfile(message)}
+      style={[styles.messageCard, conversation.unread && styles.unreadMessageCard]}
+      onPress={() => navigation.push(`/chat/${conversation.id}`)}
+      onLongPress={() => handleViewProfile(conversation)}
+      activeOpacity={0.7}
     >
       <View style={styles.photoContainer}>
-        <Image source={{ uri: message.photo }} style={styles.messagePhoto} />
-        {message.online && <View style={styles.onlineIndicator} />}
+        <Image source={{ uri: conversation.participantPhoto }} style={styles.messagePhoto} />
+        <GlowingStatusDot 
+          status={conversation.status || 'offline'} 
+          size={8} 
+          position="top-right" 
+        />
+        {conversation.isConnected && (
+          <View style={styles.connectionBadge}>
+            <Shield size={10} color="white" strokeWidth={2} />
+          </View>
+        )}
       </View>
       
       <View style={styles.messageContent}>
         <View style={styles.messageHeader}>
           <View style={styles.nameContainer}>
-            <Text style={[styles.messageName, message.unread && styles.unreadMessageName]}>
-              {message.firstName} {message.lastName}
+            <Text style={[styles.messageName, conversation.unread && styles.unreadMessageName]}>
+              {conversation.participantName}
             </Text>
-            {message.isVerified && (
-              <Shield size={14} color="#1E40AF" strokeWidth={2} />
-            )}
           </View>
-          <Text style={styles.messageTime}>{message.timestamp}</Text>
+          <Text style={[styles.messageTime, conversation.unread && styles.unreadMessageTime]}>
+            {conversation.timestamp}
+          </Text>
         </View>
         
-        <Text style={styles.messageProfession}>
-          {message.profession} at {message.company}
-        </Text>
-        
-        <Text style={[styles.lastMessage, message.unread && styles.unreadLastMessage]} numberOfLines={2}>
-          {message.lastMessage}
+        <Text style={[styles.lastMessage, conversation.unread && styles.unreadLastMessage]} numberOfLines={1}>
+          {isAILoading && conversation.unread ? 'Typing...' : conversation.lastMessage || 'Start a conversation...'}
         </Text>
       </View>
       
-      {message.unread && <View style={styles.unreadBadge} />}
+      {conversation.unread && (
+        <View style={styles.unreadIndicator}>
+          <View style={styles.unreadBadge} />
+        </View>
+      )}
     </TouchableOpacity>
   );
 
@@ -175,9 +206,9 @@ export default function MessagesScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {messages.length > 0 ? (
-          messages.map(message => (
-            <MessageCard key={message.id} message={message} />
+        {conversations.length > 0 ? (
+          conversations.map(conversation => (
+            <MessageCard key={conversation.id} conversation={conversation} />
           ))
         ) : (
           <View style={styles.emptyState}>
@@ -230,7 +261,7 @@ export default function MessagesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F8FAFC',
   },
   header: {
     flexDirection: 'row',
@@ -238,145 +269,197 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 60,
-    paddingBottom: 16,
+    paddingBottom: 20,
     backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   headerLeft: {
     flex: 1,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.5,
   },
   headerSubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginTop: 2,
+    fontSize: 15,
+    color: '#64748B',
+    marginTop: 4,
+    fontWeight: '500',
   },
   searchButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   content: {
     flex: 1,
+    paddingTop: 8,
   },
   messageCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    marginHorizontal: 16,
+    marginVertical: 4,
+    padding: 16,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   unreadMessageCard: {
-    backgroundColor: '#FEFEFE',
+    backgroundColor: '#FEF7FF',
     borderLeftWidth: 4,
-    borderLeftColor: '#1E40AF',
+    borderLeftColor: '#8B5CF6',
+    shadowColor: '#8B5CF6',
+    shadowOpacity: 0.15,
   },
   photoContainer: {
     position: 'relative',
     marginRight: 16,
   },
   messagePhoto: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
   },
-  onlineIndicator: {
+
+  connectionBadge: {
     position: 'absolute',
-    bottom: 2,
-    right: 2,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#10B981',
+    bottom: -2,
+    right: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#1E40AF',
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 2,
     borderColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
   messageContent: {
     flex: 1,
+    justifyContent: 'center',
   },
   messageHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
-  },
-  nameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  messageName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  unreadMessageName: {
-    fontWeight: '700',
-  },
-  messageTime: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  messageProfession: {
-    fontSize: 14,
-    color: '#6B7280',
     marginBottom: 6,
   },
-  lastMessage: {
-    fontSize: 14,
-    color: '#6B7280',
-    lineHeight: 20,
+  nameContainer: {
+    flex: 1,
   },
-  unreadLastMessage: {
-    color: '#374151',
+  messageName: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#0F172A',
+    letterSpacing: -0.3,
+  },
+  unreadMessageName: {
+    color: '#1E293B',
+  },
+  messageTime: {
+    fontSize: 13,
+    color: '#94A3B8',
     fontWeight: '500',
   },
-  unreadBadge: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#1E40AF',
+  unreadMessageTime: {
+    color: '#8B5CF6',
+    fontWeight: '600',
+  },
+  lastMessage: {
+    fontSize: 15,
+    color: '#64748B',
+    lineHeight: 20,
+    fontWeight: '400',
+  },
+  unreadLastMessage: {
+    color: '#475569',
+    fontWeight: '600',
+  },
+  unreadIndicator: {
     marginLeft: 12,
+    justifyContent: 'center',
+  },
+  unreadBadge: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#8B5CF6',
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 2,
   },
   emptyState: {
     alignItems: 'center',
     backgroundColor: 'white',
     padding: 48,
     margin: 20,
-    borderRadius: 16,
+    borderRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
   },
   emptyStateTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-    marginTop: 16,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginTop: 20,
+    marginBottom: 8,
   },
   emptyStateText: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: 16,
+    color: '#64748B',
     textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 20,
-    marginBottom: 24,
+    lineHeight: 24,
+    marginBottom: 32,
+    paddingHorizontal: 20,
   },
   discoverButton: {
     backgroundColor: '#1E40AF',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 16,
+    shadowColor: '#1E40AF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   discoverButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: 'white',
+    letterSpacing: 0.3,
   },
 });
